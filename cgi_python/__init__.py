@@ -7,7 +7,7 @@ PY2 = _sys.version_info[0] == 2
 PY3 = _sys.version_info[0] == 3
 PY34 = _sys.version_info[0:2] >= (3, 4)
 
-# The following code is from (six, urllib3)
+# The following code is from six
 
 if PY3:
     string_types = (str,)
