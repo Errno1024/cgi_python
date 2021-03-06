@@ -119,12 +119,12 @@ def _headers_prepare(headers):
     return map(lambda x: (str(x[0]).capitalize(), str(x[1])), headers.items())
 
 def set_headers(*headers, cookies: dict=None, file=_sys.stdout, **kwargs):
-    hs = {}
+    hs = {'Content-type': 'text/html'}
     for header in headers:
         _type_check(header, dict)
         hs.update(_headers_prepare(header))
     hs.update(_headers_prepare(kwargs))
-    for hname, candidates in _header_map:
+    for hname, candidates in _header_map.items():
         found = False
         if hname in hs:
             found = True
@@ -211,12 +211,18 @@ class Arguments:
         return func(*args, *self.__args__, **kwargs, **self.__kwargs__)
 
 
-def output_html(source, arguments: Arguments, *args, encoding='utf-8',
+def parse_html(source, arguments: Arguments=None, *args, encoding='utf-8',
                 engine: callable=engines.default, **kwargs) -> str:
     if isinstance(arguments, Arguments):
         arguments = arguments.copy()
         if args or kwargs:
             arguments.update(*args, **kwargs)
+    elif isinstance(arguments, dict):
+        arguments = Arguments(**arguments)
+        if args or kwargs:
+            arguments.update(*args, **kwargs)
+    elif arguments is None:
+        arguments = Arguments(*args, **kwargs)
     else:
         arguments = Arguments(arguments, *args, **kwargs)
     if isinstance(source, (binary_type, text_type)):
@@ -227,3 +233,9 @@ def output_html(source, arguments: Arguments, *args, encoding='utf-8',
         raise ValueError(f'expected {text_type.__name__} object, {binary_type.__class__} object or file object, '
                          f'got \'{source.__class__.__name__}\'')
     return arguments.call(engine, html)
+
+def output_html(source, arguments: Arguments=None, *args, encoding='utf-8',
+                engine: callable=engines.default, **kwargs) -> str:
+    res = parse_html(source, arguments, *args, encoding=encoding, engine=engine, **kwargs)
+    output(res, end='\n')
+    return res
